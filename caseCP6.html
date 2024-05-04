@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Case</title>
+    <link rel="stylesheet" href="./case.css">
+</head>
+<body>
+    <div id="header">
+        <h1>Calculator</h1>
+    </div>
+    <div id="main">
+        <input type="text" id="result" value="0" readonly>
+        <button type="button" class="num" id="clear">clear</button>
+        <button type="button" class="op"  >/</button>
+        <button type="button" class="num" >7</button>
+        <button type="button" class="num" >8</button>
+        <button type="button" class="num" >9</button>
+        <button type="button" class="op"  >*</button>
+        <button type="button" class="num" >4</button>
+        <button type="button" class="num" >5</button>
+        <button type="button" class="num" >6</button>
+        <button type="button" class="op"  >-</button>
+        <button type="button" class="num" >1</button>
+        <button type="button" class="num" >2</button>
+        <button type="button" class="num" >3</button>
+        <button type="button" class="op"  >+</button>
+        <button type="button" class="num" id="zero">0</button>
+        <button type="button" class="op"  >=</button>
+    </div>
+    <div id="footer">
+        <h4>Created by Firstname Lastname</h4>
+    </div>
+    <script>
+        "use strict";
+
+        // =============================================================================
+        // Global variables
+        // =============================================================================
+        // if we entered "3+5" prevValue=3, currValue=5, currOper=+
+        let currValue           = 0;     // Current numeric value and what is displayed
+        let prevValue           = 0;     // Previous numeric value
+        let currOper            = null;  // Currently selected operator
+        let waitingForNewNumber = true;  // expecting to start a new number, not an oper
+
+        const display     = document.getElementById('result');  
+        const operButtons = document.querySelectorAll('.op');   // All operator buttons
+
+        // =============================================================================
+        // Initialize the calculator on window DOM load
+        // =============================================================================
+        window.onload = function() {
+            const mainDiv = document.getElementById('main');
+            // listen for buttons to be clicked and call handleButton with button text
+            mainDiv.addEventListener('click', function (event) {
+                if (event.target.type === 'button') {
+                    handleButton(event.target.textContent);
+                }
+            });
+            clear();        // Start with a clear state
+            stateInspector(null)
+        };
+
+        // =============================================================================
+        // Button Click Handler
+        // =============================================================================
+        function handleButton(value) {
+            console.log(`handleButton: ${value}`)
+
+            if (value === 'clear') {
+                clear();
+            } else if ("0123456789".includes(value)) {
+                append(parseInt(value, 10));        // value is a string, convert to int
+            } else if (['/', '*', '-', '+'].includes(value)) {
+                setOp(value);
+            } else if (value === '=') {
+                calculateResult();
+            } else {
+                console.log('this should never happen!')
+            }
+
+            stateInspector(value)
+        }
+
+        // =============================================================================
+        // Clear the calculator and reset all values
+        // =============================================================================
+        function clear() {
+            currValue           = 0;
+            prevValue           = 0;
+            currOper            = null;
+            waitingForNewNumber = true;
+            disableOperators();         
+            updateDisplay();
+        }
+
+        // =============================================================================
+        // Append digits to the current value
+        // =============================================================================
+        function append(number) {
+            if (waitingForNewNumber) {      // Start the new number with the digit
+                currValue = number;         
+                waitingForNewNumber = false;
+                enableOperators();
+            } else {                        // add digits
+                currValue = currValue * 10 + number; // Append to the current number
+                // if we had 3, and then they append a 5, it would be 3 * 10 + 5 = 35
+            }
+            updateDisplay();
+        }
+
+        // =============================================================================
+        // Set the operation
+        // =============================================================================
+        function setOp(operator) {
+            console.log(`setOp(${operator})`)
+
+            if (currOper && !waitingForNewNumber) {
+                calculateResult(); // chaining 3 + 5 + 7 + 8
+            }
+            prevValue = currValue;
+            currOper = operator;
+            waitingForNewNumber = true; // Set the flag to true to start a new number
+            disableOperators();         // Disable operators 
+        }
+
+        // =============================================================================
+        // Calculate and display the result based on the current operator
+        // =============================================================================
+        function calculateResult() {
+            console.log(`calculateResult()`)
+
+            if (currOper) {
+                switch (currOper) {
+                    case '+':
+                        currValue = prevValue + currValue;
+                        break;
+                }
+                updateDisplay();
+
+                // reset waiting for next number and operator
+                prevValue = 0;
+                currOper = null;
+                waitingForNewNumber = true; // Set the flag to true to start a new number
+                disableOperators();         // Disable operators 
+            }
+        }
+
+        // =============================================================================
+        // Function to update the calculator's display
+        // =============================================================================
+        function updateDisplay() {
+            display.value = currValue;
+        }
+
+        // =============================================================================
+        // Disable all operator buttons (procedural approach)
+        // =============================================================================
+        function disableOperators() {
+            for (let i = 0; i < operButtons.length; i++) {
+                operButtons[i].disabled = true;  
+            }
+        }
+
+        // =============================================================================
+        // Enable all operator buttons (functional approach)
+        // =============================================================================
+        function enableOperators() {
+            operButtons.forEach(button => button.disabled = false);
+        }
+
+        // =============================================================================
+        // Bonus Debugging tool using console.table()
+        // =============================================================================
+        function stateInspector(value) {
+            // Create an object with the data to display as a table
+            const data = {
+                Button_Pressed     : value,
+                currValue_Display  : currValue,
+                prevValue          : prevValue,
+                currOper           : currOper,
+                waitingForNewNumber: waitingForNewNumber,
+                Operators_Disabled : waitingForNewNumber
+            };
+            console.table(data);
+        }
+    </script>
+</body>
+</html>
